@@ -11,15 +11,21 @@ import java.lang.annotation.*
 @GroovyASTTransformation(phase = CompilePhase.CONVERSION)
 class NotASTTransformation implements ASTTransformation {
 
+    private static final METHOD_NAME = 'not'
+
     void visit(ASTNode[] astNodes, SourceUnit sourceUnit) {
-        List classes = sourceUnit.ast.classes
+        List classes = filterClassesWithoutNotMethod(sourceUnit.ast.classes)
         MethodNode notMethod = notMethod()
         classes.each { ClassNode clazz -> clazz.addMethod notMethod }
     }
 
+    private filterClassesWithoutNotMethod(List classes) {
+        classes.findAll { clazz -> clazz.methods.every { method -> method.name != METHOD_NAME } }
+    }
+
     private MethodNode notMethod() {
         ASTNode[] ast = new AstBuilder().buildFromSpec {
-            method('not', MethodNode.ACC_PUBLIC | MethodNode.ACC_STATIC, Boolean) {
+            method(METHOD_NAME, MethodNode.ACC_PUBLIC | MethodNode.ACC_STATIC, Boolean) {
                 parameters {
                     parameter 'expression': Object
                 }
